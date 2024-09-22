@@ -1,6 +1,6 @@
 export interface NasaResponse {
   copyright: string;
-  date: Date;
+  date: string;
   explanation: string;
   hdurl: string;
   media_type: string;
