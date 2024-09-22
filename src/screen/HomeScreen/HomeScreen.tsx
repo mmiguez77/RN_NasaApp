@@ -1,44 +1,72 @@
-import React, {useEffect, useState} from 'react';
-import {StyleSheet, Text, View} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { format, sub } from 'date-fns';
 
 // Custom
+import { getTodayImage, getLastFiveDaysImages } from '../../services';
+import { NasaResponse } from '../../infrastructure/interfaces/NasaResponse';
 import Header from '../../components/Header/Header';
-import getImgOfDay from '../../services/getImgOfDay.service';
 import TodayImage from '../../components/TodayImage/TodayImage';
-import {NasaResponse} from '../../infrastructure/interfaces/NasaResponse';
+import LastFiveDaysImages from '../../components/LastFiveDaysImages/LastFiveDaysImages';
 
 const HomeScreen = () => {
-  const [todayImg, setTodayImg] = useState<NasaResponse>();
+  const [todayImage, setTodayImage] = useState<NasaResponse>();
+  const [lastFiveDaysImage, setLastFiveDaysImage] = useState<NasaResponse[]>(
+    [],
+  );
   const [errorMsg, setErrorMsg] = useState<any>('');
 
   useEffect(() => {
-    const callApi = async () => {
+    const CallGetImgOfDay = async () => {
       try {
-        const response = await getImgOfDay();
+        const response = await getTodayImage();
         if (response) {
-          setTodayImg(response);
+          setTodayImage(response);
         }
       } catch (error) {
         setErrorMsg(error);
       }
     };
 
-    callApi();
+    CallGetImgOfDay();
+  }, []);
+
+  useEffect(() => {
+    const startDate = format(sub(new Date(), { days: 5 }), 'yyyy-MM-dd');
+    const endDate = format(new Date(), 'yyyy-MM-dd');
+
+    const CallGetLast5DaysImg = async () => {
+      try {
+        const response = await getLastFiveDaysImages(startDate, endDate);
+        if (response) {
+          setLastFiveDaysImage(response);
+        }
+      } catch (error) {
+        setErrorMsg(error);
+      }
+    };
+
+    CallGetLast5DaysImg();
   }, []);
 
   return (
     <View style={styles.container}>
       <Header />
-      {!todayImg ? (
+      {!todayImage ? (
         <View>
           <Text>Loading...</Text>
         </View>
       ) : (
         <TodayImage
-          url={todayImg.url}
-          date={todayImg.date}
-          title={todayImg.title}
+          url={todayImage.url}
+          date={todayImage.date}
+          title={todayImage.title}
         />
+      )}
+      {!lastFiveDaysImage ? (
+        <Text>Loading...</Text>
+      ) : (
+        <LastFiveDaysImages lastFiveDaysImages={lastFiveDaysImage} />
       )}
     </View>
   );
